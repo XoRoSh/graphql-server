@@ -1,0 +1,11 @@
+# Define the Data type
+type Data {
+  id: String
+  name: String
+  description: String
+}
+
+# Define the root query type
+type Query {
+  getData(id: String!): Data
+}
