@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	pb "github.com/XoRoSh/grpc-server/grpc/data"
+	pb "github.com/XoRoSh/grpc-server/data"
 
 	"github.com/graphql-go/graphql"
 	"google.golang.org/grpc"
