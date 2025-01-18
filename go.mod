@@ -1,4 +1,4 @@
-module graphql
+module github.com/XoRoSh/graphql-server
 
 go 1.23.4
 
