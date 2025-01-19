@@ -9,18 +9,19 @@ import (
 	pb "github.com/XoRoSh/grpc-server/data"
 
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/language/ast"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
-func extractFields(selectionSet *graphql.SelectionSet) []string {
-	var fields []string
-	for _, selection := range selectionSet.Selections {
-		if field, ok := selection.(*graphql.Field); ok {
-			fields = append(fields, field.Name.Value)
+func extractFields(selections []ast.Selection) []string {
+	var fieldNames []string
+	for _, selection := range selections {
+		if field, ok := selection.(*ast.Field); ok {
+			fieldNames = append(fieldNames, field.Name.Value)
 		}
 	}
-	return fields
+	return fieldNames
 }
 
 func createSchema(client pb.DataServiceClient) graphql.Schema {
@@ -49,7 +50,7 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 
 					// Extract selected fields for the FieldMask
 					fieldMask := &fieldmaskpb.FieldMask{
-						Paths: extractFields(&params.Info.FieldASTs[0].SelectionSet),
+						Paths: extractFields(params.Info.FieldASTs[0].SelectionSet.Selections),
 					}
 
 					// Make the gRPC request with the FieldMask
@@ -91,14 +92,24 @@ func main() {
 
 	// GraphQL handler
 	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query().Get("query")
+		var params struct {
+			Query string `json:"query"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+
 		result := graphql.Do(graphql.Params{
 			Schema:        schema,
-			RequestString: query,
+			RequestString: params.Query,
 		})
+
 		if len(result.Errors) > 0 {
 			log.Printf("Failed to execute query: %v", result.Errors)
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(result)
 	})
