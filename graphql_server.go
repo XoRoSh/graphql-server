@@ -25,7 +25,7 @@ func extractFields(selections []ast.Selection) []string {
 }
 
 func createSchema(client pb.DataServiceClient) graphql.Schema {
-	// GraphQL types
+	// GraphQL dynamically create schema
 	dataType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Data",
 		Fields: graphql.Fields{
@@ -51,7 +51,7 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 						Paths: extractFields(params.Info.FieldASTs[0].SelectionSet.Selections),
 					}
 
-					// Make the gRPC request with the FieldMask
+					// Make the grpc call with fieldMask
 					res, err := client.GetData(context.Background(), &pb.DataRequest{
 						Id:        id,
 						FieldMask: fieldMask,
@@ -66,7 +66,6 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 		},
 	})
 
-	// Create schema
 	schema, err := graphql.NewSchema(graphql.SchemaConfig{
 		Query: rootQuery,
 	})
@@ -77,7 +76,6 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 }
 
 func main() {
-	// Connect to gRPC server
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to gRPC server: %v", err)
@@ -85,7 +83,6 @@ func main() {
 	defer conn.Close()
 	client := pb.NewDataServiceClient(conn)
 
-	// Create GraphQL schema
 	schema := createSchema(client)
 
 	// GraphQL handler
@@ -112,7 +109,6 @@ func main() {
 		_ = json.NewEncoder(w).Encode(result)
 	})
 
-	// Start HTTP server
 	log.Println("GraphQL server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
