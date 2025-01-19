@@ -25,7 +25,7 @@ func extractFields(selections []ast.Selection) []string {
 }
 
 func createSchema(client pb.DataServiceClient) graphql.Schema {
-	// Define GraphQL types
+	// GraphQL types
 	dataType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Data",
 		Fields: graphql.Fields{
@@ -35,7 +35,6 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 		},
 	})
 
-	// Define the root query
 	rootQuery := graphql.NewObject(graphql.ObjectConfig{
 		Name: "RootQuery",
 		Fields: graphql.Fields{
@@ -45,7 +44,6 @@ func createSchema(client pb.DataServiceClient) graphql.Schema {
 					"id": &graphql.ArgumentConfig{Type: graphql.String},
 				},
 				Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-					// Extract the `id` argument
 					id, _ := params.Args["id"].(string)
 
 					// Extract selected fields for the FieldMask
